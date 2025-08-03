@@ -8,12 +8,7 @@ FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 
-- RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --force
-+ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --force
-
-
-
-
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --force
 
 RUN pnpm run -r build
 
@@ -45,7 +40,6 @@ ENV DATABASE_TYPE="sqlite"
 RUN chmod +x ./docker-bootstrap.sh
 
 CMD ["./docker-bootstrap.sh"]
-
 
 FROM base AS app
 COPY --from=build /app /app
