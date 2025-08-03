@@ -8,7 +8,8 @@ FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --force
+# ✅ 删除旧的 pnpm-lock.yaml，重新安装依赖
+RUN rm -f pnpm-lock.yaml && pnpm install
 
 RUN pnpm run -r build
 
