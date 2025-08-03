@@ -1,4 +1,4 @@
-FROM docker.io/node:20.16.0-alpine AS base
+FROM node:20.16.0-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -6,11 +6,11 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN npm i -g pnpm
 
 FROM base AS build
-COPY . /usr/src/app
 WORKDIR /usr/src/app
+COPY . .
 
-# ✅ 删除旧的 pnpm-lock.yaml，重新安装依赖
-RUN rm -f pnpm-lock.yaml && pnpm install
+# ⚠️ 删除不兼容的 lockfile，并强制安装依赖
+RUN rm -f pnpm-lock.yaml && pnpm install --force
 
 RUN pnpm run -r build
 
@@ -25,9 +25,8 @@ RUN cd /app-sqlite && \
     pnpm exec prisma generate
 
 FROM base AS app-sqlite
-COPY --from=build /app-sqlite /app
-
 WORKDIR /app
+COPY --from=build /app-sqlite /app
 
 EXPOSE 4000
 
@@ -40,13 +39,11 @@ ENV DATABASE_URL="file:../data/wewe-rss.db"
 ENV DATABASE_TYPE="sqlite"
 
 RUN chmod +x ./docker-bootstrap.sh
-
 CMD ["./docker-bootstrap.sh"]
 
 FROM base AS app
-COPY --from=build /app /app
-
 WORKDIR /app
+COPY --from=build /app /app
 
 EXPOSE 4000
 
@@ -58,5 +55,4 @@ ENV AUTH_CODE=""
 ENV DATABASE_URL=""
 
 RUN chmod +x ./docker-bootstrap.sh
-
 CMD ["./docker-bootstrap.sh"]
